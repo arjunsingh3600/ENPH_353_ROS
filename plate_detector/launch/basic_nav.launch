@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+<!-- 	<node name ="driver"  pkg= "plate_detector" type= "RDdrive.py" output="screen" >
+		<param name="/use_sim_time" value="true" />
+	</node> -->
+	<node name ="plate_detector"  pkg= "plate_detector" type= "move_show.py" output="screen" />
+
+
+
+
+</launch>
