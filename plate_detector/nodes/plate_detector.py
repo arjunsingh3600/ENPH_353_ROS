@@ -40,15 +40,15 @@ class Node:
 		rospy.init_node('image_feature', anonymous=True)
 
 		self.sub = rospy.Subscriber("/R1/pi_camera/image_raw",Image,self.show_image,queue_size=1)
-		self.score_pub = rospy.Publisher('/license_plate topic', String, queue_size=1)
+		self.score_pub = rospy.Publisher('/license_plate', String, queue_size=1)
+
 		self.bridge = CvBridge()
-		print("subscribed to node")
+		
 
 		
 
 
 
-		self.rate = rospy.Rate(1);
 
 		self.recorded_spots = []  # readings sent to score tracker
 		self.recorded_plates = []  # all recorded plate readings
@@ -59,7 +59,7 @@ class Node:
 
 		self.cnn = PlateCNN('./plate_model.h5') # path does not matter. NN path hardcoded in predict.py
 
-		
+		self.counter = 0 
 
 		# turn QR on to collect qr + plate data to 
 
@@ -208,7 +208,7 @@ class Node:
 		
 		
 	
-		if(width*height > 5000 and width >0):
+		if(width*height > 4000 and width >0):
 			# font = cv2.FONT_HERSHEY_SIMPLEX
 			# text = "width {} height {} Area {}".format(width,height,width*height)
 			# print(text)
@@ -246,16 +246,16 @@ class Node:
 
 			
 			
-			if plate_val[0].isdigit() or plate_val[1].isdigit() or not plate_val[2].isdigit() or not plate_val[3].isdigit() or spot_val in self.published:
+			if plate_val[0].isdigit() or plate_val[1].isdigit() or not plate_val[2].isdigit() or not plate_val[3].isdigit() :
 				self.recorded_plates = []
 				self.recorded_spots = []
 				return
 
 
 
-
-			print(plate_val)
-			print(spot_val)
+			print( (str('TeamRed,multi21,{},{}').format(spot_val[1], plate_val)) )
+			# self.score_pub.publish(str('TeamRed,multi21,{},{}').format(spot_val[1], plate_val))
+		
 			self.recorded_plates = []
 			self.recorded_spots = []	
 			
@@ -266,23 +266,42 @@ class Node:
 		x,y,w,h = cv2.boundingRect(contour)
 		
 		lower_val = np.array([0,0,0])
-   		upper_val = np.array([360,50,50])
+   		upper_val = np.array([360,30,30])
 
    		mask = cv2.inRange(hsv, lower_val, upper_val)
    		#mask_inv = cv2.bitwise_not(mask)
 
-   		parking =""
+   		
 
 		if w > 2*h :
-			image = mask[ y-2*h:y, x:x+w ]
+
+			image = mask[ y-2*h:y+h, x:x+w ]
+			# count no of digits
+			vsum = np.sum(image,axis=0)
+
+			vsum[vsum>0] =1
+
+			vdif = np.diff(vsum.astype(float))
+
+			LL = np.where(vdif>0)[0]
+			RL = np.where(vdif<0)[0]
+
+			if LL.shape[0] is not 2 or RL.shape[0] is not 2:
+				return 	
+
 			image = cv2.resize(image,(100,100))
 			parking = self.cnn.predict_parking(image)
-			# cv2.imshow('img',to_save)
+			self.recorded_spots.append(parking)
+			# cv2.imshow('img',image)
 			# cv2.waitKey(1)
-			# name  = str(os.path.dirname(os.path.realpath(__file__))) + '/screen_shots/parking'  +'P' +  str(randint(10000,99999)) +'.png'
-			# cv2.imwrite( name, to_save)
 
-		return parking
+			# print(parking)
+			# name  = str(os.path.dirname(os.path.realpath(__file__))) + '/screen_shots/parking'  +'P' +  str(randint(10000,99999)) +'.png'
+			# cv2.imwrite( name, image)
+
+		
+
+		
 
 		
 
@@ -319,14 +338,15 @@ class Node:
 
 			# if plate was big enough
 
-				p_spot = self.get_parking(contour,cv_image)
+				self.get_parking(contour,cv_image)
 
 
 
-				self.recorded_spots.append(p_spot)
+				
 
 			
 				digits = self.cnn.predict(plate)
+				
 				
 				if  not(digits == ""):
 
@@ -334,8 +354,10 @@ class Node:
 					self.recorded_plates.append(digits)
 
 					
-					# cv2.imshow('fuck yeah',plate)
-					# cv2.waitKey(1)
+
+					
+					cv2.imshow('fuck yeah',plate)
+					cv2.waitKey(1)
 
 					# if self.QR:
 					# 	self.image_buffer.append(digits)
