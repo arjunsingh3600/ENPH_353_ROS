@@ -208,7 +208,7 @@ class Node:
 		
 		
 	
-		if(width*height > 4000 and width >0):
+		if(width*height > 3500 and width >0):
 			# font = cv2.FONT_HERSHEY_SIMPLEX
 			# text = "width {} height {} Area {}".format(width,height,width*height)
 			# print(text)
@@ -254,8 +254,8 @@ class Node:
 
 
 			print( (str('TeamRed,multi21,{},{}').format(spot_val[1], plate_val)) )
-			# self.score_pub.publish(str('TeamRed,multi21,{},{}').format(spot_val[1], plate_val))
-		
+			self.score_pub.publish(str('TeamRed,multi21,{},{}').format(spot_val[1], plate_val))
+			
 			self.recorded_plates = []
 			self.recorded_spots = []	
 			
@@ -291,6 +291,8 @@ class Node:
 
 			image = cv2.resize(image,(100,100))
 			parking = self.cnn.predict_parking(image)
+
+			#print(parking)
 			self.recorded_spots.append(parking)
 			# cv2.imshow('img',image)
 			# cv2.waitKey(1)
@@ -352,6 +354,7 @@ class Node:
 
 					# digits successfully detected
 					self.recorded_plates.append(digits)
+					#print(digits)
 
 					
 
@@ -361,11 +364,10 @@ class Node:
 
 					# if self.QR:
 					# 	self.image_buffer.append(digits)
-			if len(self.recorded_plates)>2:
-				self.publish_readings()
-			else:
+		
+			
 
-				self.publish_readings()
+				
 				
 
 
@@ -373,7 +375,7 @@ class Node:
 			# if self.QR:
 			# 	if len(self.image_buffer) >0 and len(self.plate_buffer) > 0:
 			# 		self.save_data()
-
+		self.publish_readings()
 
 			
 
