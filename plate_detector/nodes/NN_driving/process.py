@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 import gzip, pickle, pickletools
 import cv2
-
+import bz2
 import numpy as np
 
 
@@ -20,40 +20,40 @@ def plot_dist():
 	for filename in os.listdir(os.getcwd()+'/train_data'):
 
 		if 'left' in filename:
-		 	dist['left'] = dist['left'] + 1  
+			dist['left'] = dist['left'] + 1  
 
 		if 'right' in filename :
-		 	dist['right'] = dist['right'] + 1 
+			dist['right'] = dist['right'] + 1 
 
 		if 'straight' in filename :
-		 	dist['straight'] = dist['straight'] + 1 
+			dist['straight'] = dist['straight'] + 1 
 			
 	
 	plt.bar(list(dist.keys()), dist.values(), color='g')
-  	plt.show()
+	plt.show()
 
 
-def compress_save():
+def compress_save(file_name):
+
 	x_data =[]
-
 	y_data = []
+	i =0
 
 
-	
 	for filename in os.listdir(os.getcwd() + '/train_data'):
 		
 		
 
 		if 'left' in filename:
-		 	 sv_dir = np.asarray([1,0,0])
+			 sv_dir = np.asarray([1,0,0])
 
 		elif 'right' in filename :
-		 	sv_dir = np.asarray([0,0,1])
+			sv_dir = np.asarray([0,0,1])
 		 
 		elif 'straight' in filename :
-		 	sv_dir = np.asarray([0,1,0])
+			sv_dir = np.asarray([0,1,0])
 		else: 
-		 	continue
+			continue
 
 		
 		image = cv2.imread('./train_data/'+filename,0)
@@ -61,7 +61,7 @@ def compress_save():
 		image = cv2.resize(image, (0,0), fx=0.4,fy=0.4)
 	
 
-
+		i = i+1
 		x_data.append(image[:,:,np.newaxis])
 		y_data.append(sv_dir)
 
@@ -75,22 +75,22 @@ def compress_save():
 	print(y_data.shape)
 	
 
-	with gzip.open('./driving_data_x.pbz2', "wb") as f:
-	    pickled = pickle.dumps(x_data)
-	    optimized_pickle = pickletools.optimize(pickled)
-	    f.write(optimized_pickle)
+	with gzip.open('./driving_data_x_2.pbz2', "wb") as f:
+		pickled = pickle.dumps(x_data)
+		optimized_pickle = pickletools.optimize(pickled)
+		f.write(optimized_pickle)
 
-	with gzip.open('./driving_data_y.pbz2', "wb") as f:
-	    pickled = pickle.dumps(y_data)
-	    optimized_pickle = pickletools.optimize(pickled)
-	    f.write(optimized_pickle)
-
+	with gzip.open('./driving_data_y_2.pbz2', "wb") as f:
+		pickled = pickle.dumps(y_data)
+		optimized_pickle = pickletools.optimize(pickled)
+		f.write(optimized_pickle)
+	print("added {} files".formatt(i))
 
 
 
 if __name__ == "__main__":
 	
-	compress_save()
+	compress_save('driving_data')
 
 
 

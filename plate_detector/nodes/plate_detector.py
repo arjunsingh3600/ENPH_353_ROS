@@ -259,7 +259,11 @@ class Node:
 			self.recorded_plates = []
 			self.recorded_spots = []	
 			
-			self.published.append(spot_val)
+			if spot_val not in self.published:
+				self.published.append(spot_val)
+				self.score_pub.publish(tsr('TeamRed,multi21,-1,XXXX'))
+				print('stopped timer')
+
 
 	def get_parking(self,contour,image):
 		hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
