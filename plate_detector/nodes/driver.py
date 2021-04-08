@@ -20,7 +20,7 @@ set_session(sess)
 
 class nnDriver:
 
-	def __init__(self,linear_vel = 0.09 ,angular_vel =0.1):
+	def __init__(self,linear_vel = 0.09 ,angular_vel =0.18):
 
 
 		#load model
@@ -31,16 +31,16 @@ class nnDriver:
 			json_config = json_file.read()
 			self.model = models.model_from_json(json_config)
 		self.model.load_weights(path  + '/NN_driving/nn_data/weights_only_driving.h5')
-		print("in cnn")
+		print("in driving cnn")
 
 
 
 	
-		rospy.init_node('topic_publisher', anonymous=True)
-		self.bridge = CvBridge()
-		self.velPub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
+		# rospy.init_node('topic_publisher', anonymous=True)
+		# self.bridge = CvBridge()
+		# self.velPub = rospy.Publisher('/R1/cmd_vel', Twist, queue_size=1)
 
-		sub = rospy.Subscriber("/R1/pi_camera/image_raw",Image,self.image_callback,queue_size=1)
+		# sub = rospy.Subscriber("/R1/pi_camera/image_raw",Image,self.image_callback,queue_size=1)
 
 		self.move = Twist()
 		self.angular_vel =angular_vel
@@ -48,20 +48,20 @@ class nnDriver:
 
 
 
-	def image_callback(self,image_message):
+	def generate_vel(self,cv_image):
 
 		# get image
-		cv_image = self.bridge.imgmsg_to_cv2(image_message,"bgr8")
+		#cv_image = self.bridge.imgmsg_to_cv2(image_message,"bgr8")
 
 		
 		# process
 		mask = self.process(cv_image)
 
-		cv2.imshow('a',mask)
+		cv2.imshow('a',cv2.resize(cv_image,(0,0),fx=0.4,fy=0.4))
 		cv2.waitKey(1)
 
 		# send to vel command
-		self.send_vel(mask)
+		return self.send_vel(mask)
 		
 
 	def process(self,image):
@@ -92,7 +92,7 @@ class nnDriver:
 		
 		#resize
 
-		mask = cv2.resize(mask, (0,0), fx=0.4,fy=0.4)
+		mask = cv2.resize(mask, (205,115))
 		#normalize
 		mask = np.asarray(mask)
 
@@ -115,7 +115,7 @@ class nnDriver:
 			prediction = self.model.predict(np.asarray([image[:,:,np.newaxis]]))
 		prediction = np.argmax(prediction)
 
-		print(prediction)
+		#print(prediction)
 
 
 		# mutate self.move
@@ -131,13 +131,13 @@ class nnDriver:
 
 		#publish
 
-		self.velPub.publish(self.move)
+		return self.move
 
 	
 
 if __name__ == "__main__":
 
-	driver = nnDriver()
+	driver = nnDriver(0.17,0.34)
 
 
 
