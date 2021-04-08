@@ -36,7 +36,7 @@ class Node:
 
 	def __init__(self):
 
-
+		self.cnn = PlateCNN('./plate_model.h5') # path does not matter. NN path hardcoded in predict.py
 		rospy.init_node('image_feature', anonymous=True)
 
 		self.sub = rospy.Subscriber("/R1/pi_camera/image_raw",Image,self.show_image,queue_size=1)
@@ -57,23 +57,23 @@ class Node:
  
 
 
-		self.cnn = PlateCNN('./plate_model.h5') # path does not matter. NN path hardcoded in predict.py
+		
 
 		self.counter = 0 
 
 		# turn QR on to collect qr + plate data to 
 
-		# self.QR = False
+		self.QR = False
 
-		# if self.QR:
-		# 	print('cnn is on')
-		# 	self.cnn = PlateCNN('dummy')
+		if self.QR:
+	
+			self.cnn = PlateCNN('dummy')
 
-		# 	self.plate_data = {}
+			self.plate_data = {}
 
-		# 	self.image_buffer= []
-		# 	self.plate_buffer =[]
-		# 	self.last_plate =""
+			self.image_buffer= []
+			self.plate_buffer =[]
+			self.last_plate =""
 
 
 		
@@ -208,7 +208,7 @@ class Node:
 		
 		
 	
-		if(width*height > 3500 and width >0):
+		if(width*height > 3200 and width >0):
 			# font = cv2.FONT_HERSHEY_SIMPLEX
 			# text = "width {} height {} Area {}".format(width,height,width*height)
 			# print(text)
@@ -326,8 +326,7 @@ class Node:
 
 		if found:
 
-		# 	if self.QR:
-		# 		self.get_qr(cv_image)
+
 	
 
 		# if any plate  was found
@@ -335,6 +334,9 @@ class Node:
 
 
 			is_big,plate = self.get_plate(contour,cv_image)
+			if self.QR:
+				self.get_qr(cv_image)
+
 			
 			if is_big:
 
@@ -344,7 +346,15 @@ class Node:
 
 
 
-				
+				if self.QR:
+						success,digits = self.cnn.pre_process(plate)
+
+						if success:
+							self.image_buffer.append(digits)
+
+							print('digits found')
+							cv2.imshow('fuck yeah',plate)
+							cv2.waitKey(1)	
 
 			
 				digits = self.cnn.predict(plate)
@@ -353,6 +363,7 @@ class Node:
 				if  not(digits == ""):
 
 					# digits successfully detected
+
 					self.recorded_plates.append(digits)
 					#print(digits)
 
@@ -362,20 +373,20 @@ class Node:
 					cv2.imshow('fuck yeah',plate)
 					cv2.waitKey(1)
 
-					# if self.QR:
-					# 	self.image_buffer.append(digits)
+
 		
-			
+			else:
+				self.publish_readings()
 
 				
 				
 
 
 				# cv2.imshow("images",plate)
-			# if self.QR:
-			# 	if len(self.image_buffer) >0 and len(self.plate_buffer) > 0:
-			# 		self.save_data()
-		self.publish_readings()
+			if self.QR:
+				if len(self.image_buffer) >0 and len(self.plate_buffer) > 0:
+					self.save_data()
+		
 
 			
 
@@ -420,6 +431,7 @@ class Node:
 
 		self.image_buffer= []
 		self.plate_buffer =[]
+		rospy.sleep(1)
 
 	
 				
