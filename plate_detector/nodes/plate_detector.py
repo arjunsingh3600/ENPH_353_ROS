@@ -352,14 +352,13 @@ class Node:
 						if success:
 							self.image_buffer.append(digits)
 
-							print('digits found')
-							cv2.imshow('fuck yeah',plate)
-							cv2.waitKey(1)	
+							# print('digits found')
+							# cv2.imshow('fuck yeah',plate)
+							# cv2.waitKey(1)	
 
 			
 				digits = self.cnn.predict(plate)
-				
-				
+		
 				if  not(digits == ""):
 
 					# digits successfully detected
