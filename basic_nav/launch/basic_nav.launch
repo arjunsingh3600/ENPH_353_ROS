@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-	<node name ="test"  pkg= "basic_nav" type= "move_show.py" output="screen" />
-
-
-</launch>
